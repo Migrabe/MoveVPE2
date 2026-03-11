@@ -1285,6 +1285,77 @@ function normalizeMaxConsistencyInlineRow() {
   if (tools) tools.style.setProperty("display", "none", "important");
 }
 
+function normalizeSpecialModesLayout() {
+  const section = document.getElementById("specialModesSection");
+  if (!section) return;
+  const content = section.querySelector(".section-content");
+  if (!content) return;
+
+  const toggleRow = content.querySelector(".toggle-row");
+  if (toggleRow) {
+    toggleRow.classList.add("special-modes-list");
+    toggleRow.style.setProperty("display", "flex", "important");
+    toggleRow.style.setProperty("flex-direction", "column", "important");
+    toggleRow.style.setProperty("flex-wrap", "nowrap", "important");
+    toggleRow.style.setProperty("gap", "8px", "important");
+
+    toggleRow.querySelectorAll(".toggle-label").forEach((label) => {
+      label.style.setProperty("width", "100%", "important");
+      label.style.setProperty("display", "flex", "important");
+      label.style.setProperty("align-items", "center", "important");
+      label.style.setProperty("justify-content", "space-between", "important");
+      label.style.setProperty("flex-wrap", "nowrap", "important");
+      label.style.setProperty("min-height", "46px", "important");
+      label.style.setProperty("padding", "10px 12px", "important");
+      label.style.removeProperty("flex");
+
+      const textNode = label.querySelector("span");
+      if (textNode) {
+        textNode.style.setProperty("white-space", "nowrap", "important");
+        textNode.style.setProperty("overflow", "hidden", "important");
+        textNode.style.setProperty("text-overflow", "ellipsis", "important");
+      }
+    });
+  }
+
+  const seedRow = content.querySelector(".seed-row") || content.querySelector("div[style*='gap:8px'][style*='align-items:center']");
+  const seedInput = document.getElementById("seedInput");
+  const randomBtn = document.getElementById("randomSeedBtn");
+  const clearBtn = document.getElementById("clearSeedBtn");
+
+  if (seedRow) {
+    seedRow.classList.add("seed-row");
+    seedRow.style.setProperty("display", "flex", "important");
+    seedRow.style.setProperty("flex-wrap", "nowrap", "important");
+    seedRow.style.setProperty("align-items", "center", "important");
+    seedRow.style.setProperty("gap", "8px", "important");
+  }
+
+  if (seedInput) {
+    seedInput.style.setProperty("flex", "1 1 auto", "important");
+    seedInput.style.setProperty("max-width", "none", "important");
+    seedInput.style.setProperty("min-width", "0", "important");
+    seedInput.style.setProperty("height", "44px", "important");
+    seedInput.style.setProperty("min-height", "44px", "important");
+    seedInput.style.setProperty("padding", "10px 12px", "important");
+  }
+
+  [randomBtn, clearBtn].forEach((btn) => {
+    if (!btn) return;
+    btn.style.setProperty("height", "44px", "important");
+    btn.style.setProperty("min-height", "44px", "important");
+    btn.style.setProperty("padding", "0 12px", "important");
+    btn.style.setProperty("white-space", "nowrap", "important");
+  });
+
+  if (clearBtn) {
+    const labelNode = clearBtn.querySelector(".vpe-btn-label");
+    if (labelNode && !String(labelNode.textContent || "").trim()) labelNode.textContent = "Очистить";
+    if (!labelNode && !String(clearBtn.textContent || "").trim()) clearBtn.textContent = "Очистить";
+    clearBtn.setAttribute("title", "Очистить seed");
+  }
+}
+
 let mobileHelpPopover = null;
 
 function ensureMobileHelpPopover() {
@@ -2099,8 +2170,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   applyLiteMobileStylesClass();
   normalizeMaxConsistencyInlineRow();
+  normalizeSpecialModesLayout();
   setTimeout(normalizeMaxConsistencyInlineRow, 120);
+  setTimeout(normalizeSpecialModesLayout, 140);
   window.addEventListener("load", normalizeMaxConsistencyInlineRow);
+  window.addEventListener("load", normalizeSpecialModesLayout);
 
   window.taxonomyRules = [];
   fetch(getSharedConfigUrl("taxonomy-rules.json"))
