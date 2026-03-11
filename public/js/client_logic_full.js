@@ -2905,12 +2905,15 @@ function buildFlatPrompt() {
   }
 
   // Quick Style Preset
-  if (state.quickStyle && QUICK_STYLES[state.quickStyle]) parts.push(QUICK_STYLES[state.quickStyle]);
+  const quickStylePromptText = buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES);
+  if (quickStylePromptText) parts.push(quickStylePromptText);
   // Fashion & Food Style
-  if (state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle]) parts.push(FASHION_FOOD_STYLES[state.fashionFoodStyle]);
+  const fashionFoodPromptText = buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES);
+  if (fashionFoodPromptText) parts.push(fashionFoodPromptText);
 
   // FIX: Cinematic Presets
-  if (state.cinematicPreset && window.CINEMATIC_PRESETS_MAP && window.CINEMATIC_PRESETS_MAP[state.cinematicPreset]) parts.push(window.CINEMATIC_PRESETS_MAP[state.cinematicPreset]);
+  const cinematicPresetPromptText = getCinematicPresetPromptText();
+  if (cinematicPresetPromptText) parts.push(cinematicPresetPromptText);
 
   // FIX: Audio — Ambience, Foley, Cinematic FX
   if (state.ambience && typeof AMBIENCE !== 'undefined' && AMBIENCE[state.ambience]) parts.push(AMBIENCE[state.ambience]);
@@ -3026,10 +3029,13 @@ function buildStructuredPrompt() {
     if (state.directorStyle) out += "DIRECTOR: " + (_cgs ? (CHATGPT_STYLE_MAP[state.directorStyle] || state.directorStyle) : state.directorStyle) + "\n";
     if (state.artStyle && window.ART_STYLES_MAP && window.ART_STYLES_MAP[state.artStyle]) out += "ART STYLE: " + window.ART_STYLES_MAP[state.artStyle] + "\n";
   }
-  if (state.quickStyle && QUICK_STYLES[state.quickStyle]) out += "STYLE PRESET: " + QUICK_STYLES[state.quickStyle] + "\n";
-  if (state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle]) out += "FASHION/FOOD STYLE: " + FASHION_FOOD_STYLES[state.fashionFoodStyle] + "\n";
+  const quickStylePromptText = buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES);
+  if (quickStylePromptText) out += "STYLE PRESET: " + quickStylePromptText + "\n";
+  const fashionFoodPromptText = buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES);
+  if (fashionFoodPromptText) out += "FASHION/FOOD STYLE: " + fashionFoodPromptText + "\n";
   // FIX: Cinematic Preset
-  if (state.cinematicPreset && window.CINEMATIC_PRESETS_MAP && window.CINEMATIC_PRESETS_MAP[state.cinematicPreset]) out += "CINEMATIC STYLE: " + window.CINEMATIC_PRESETS_MAP[state.cinematicPreset] + "\n";
+  const cinematicPresetPromptText = getCinematicPresetPromptText();
+  if (cinematicPresetPromptText) out += "CINEMATIC STYLE: " + cinematicPresetPromptText + "\n";
   // FIX: Film Stock (was missing from structured format)
   if (manualMode && state.filmStock && FILM_STOCKS[state.filmStock]) out += "FILM STOCK: " + FILM_STOCKS[state.filmStock] + "\n";
   // FIX: Audio layers
@@ -3120,11 +3126,14 @@ function buildMidjourneyPrompt() {
     if (state.directorStyle) desc.push(state.directorStyle);
     if (state.artStyle && window.ART_STYLES_MAP && window.ART_STYLES_MAP[state.artStyle]) desc.push(window.ART_STYLES_MAP[state.artStyle]);
   }
-  if (state.quickStyle && QUICK_STYLES[state.quickStyle]) desc.push(QUICK_STYLES[state.quickStyle]);
-  if (state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle]) desc.push(FASHION_FOOD_STYLES[state.fashionFoodStyle]);
+  const quickStylePromptText = buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES);
+  if (quickStylePromptText) desc.push(quickStylePromptText);
+  const fashionFoodPromptText = buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES);
+  if (fashionFoodPromptText) desc.push(fashionFoodPromptText);
 
   // FIX: Cinematic Preset
-  if (state.cinematicPreset && window.CINEMATIC_PRESETS_MAP && window.CINEMATIC_PRESETS_MAP[state.cinematicPreset]) desc.push(window.CINEMATIC_PRESETS_MAP[state.cinematicPreset]);
+  const cinematicPresetPromptText = getCinematicPresetPromptText();
+  if (cinematicPresetPromptText) desc.push(cinematicPresetPromptText);
 
   // FIX: Audio (for video-gen models)
   if (state.ambience && typeof AMBIENCE !== 'undefined' && AMBIENCE[state.ambience]) desc.push(AMBIENCE[state.ambience]);
@@ -3287,7 +3296,8 @@ function sanitizePromptForJson(text) {
 
   const filteredLines = lines.filter((line) => {
     const trimmed = String(line || "").trim();
-    return !/^\[(Model|Aspect|Resolution):/i.test(trimmed);
+    return !/^\[(Model|Aspect|Resolution):/i.test(trimmed)
+      && !/^(NEGATIVE|Negative prompt):/i.test(trimmed);
   });
 
   const referenceIndex = filteredLines.findIndex((line) => {
@@ -3391,11 +3401,19 @@ function buildNBPScenePrompt(subjectText) {
     .filter(Boolean);
   const moodText = sanitizeNBPSceneText(state.mood || "");
   const paletteText = sanitizeNBPSceneText(state.colorPalette || "");
+  const presetNarratives = getActivePresetPromptTexts()
+    .map((value) => sanitizeNBPSceneText(value))
+    .filter(Boolean);
 
+  if (subjectText) details.push(subjectText);
   if (emotionText) details.push(`The expression feels ${emotionText.replace(/[.]+$/g, "").toLowerCase()}.`);
   if (lightingParts.length) details.push(`The scene is lit with ${lightingParts.join(", ")}.`);
   if (moodText) details.push(`The atmosphere feels ${moodText.toLowerCase()}.`);
   if (paletteText) details.push(`The color mood leans toward ${paletteText.toLowerCase()}.`);
+  presetNarratives.forEach((value) => {
+    const sentence = value.replace(/[.]+$/g, "").trim();
+    if (sentence) details.push(sentence + ".");
+  });
 
   if (!details.length) {
     const fallbackPrompt = sanitizeNBPSceneText(buildPromptTextForOutput({ includeRenderBoostInPrompt: false }) || "");
@@ -3626,9 +3644,9 @@ const PRESET_PROFILE_SECTION_MARKERS = [
   { marker: "BACKGROUND:", key: "background" }
 ];
 
-function extractPresetProfile(rawPreset) {
+function parsePresetContent(rawPreset) {
   const text = String(rawPreset || "").trim();
-  if (!text) return undefined;
+  if (!text) return {};
 
   const foundMarkers = PRESET_PROFILE_SECTION_MARKERS
     .map((entry) => {
@@ -3639,7 +3657,10 @@ function extractPresetProfile(rawPreset) {
     .sort((a, b) => a.index - b.index);
 
   if (!foundMarkers.length) {
-    return { overview: text };
+    return {
+      profile: { overview: text },
+      promptText: text
+    };
   }
 
   const profile = {};
@@ -3653,12 +3674,102 @@ function extractPresetProfile(rawPreset) {
     if (value) profile[entry.key] = value;
   });
 
-  return pruneEmptyFields(profile);
+  return {
+    profile: pruneEmptyFields(profile),
+    promptText: overview || undefined
+  };
+}
+
+function extractPresetProfile(rawPreset) {
+  return parsePresetContent(rawPreset).profile;
+}
+
+function extractPresetPromptText(rawPreset) {
+  return parsePresetContent(rawPreset).promptText;
 }
 
 function buildPresetProfileFromMap(selectedKey, presetMap) {
   if (!selectedKey || !presetMap || !presetMap[selectedKey]) return undefined;
   return extractPresetProfile(presetMap[selectedKey]);
+}
+
+function buildPresetPromptTextFromMap(selectedKey, presetMap) {
+  if (!selectedKey || !presetMap || !presetMap[selectedKey]) return undefined;
+  return extractPresetPromptText(presetMap[selectedKey]);
+}
+
+function getCinematicPresetRawText() {
+  if (!state.cinematicPreset || !window.CINEMATIC_PRESETS_MAP) return undefined;
+  return window.CINEMATIC_PRESETS_MAP[state.cinematicPreset];
+}
+
+function getCinematicPresetProfile() {
+  return extractPresetProfile(getCinematicPresetRawText());
+}
+
+function getCinematicPresetPromptText() {
+  return extractPresetPromptText(getCinematicPresetRawText());
+}
+
+function getActivePresetPromptTexts() {
+  return Array.from(new Set([
+    buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES),
+    buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES),
+    getCinematicPresetPromptText()
+  ].map((value) => String(value || "").trim()).filter(Boolean)));
+}
+
+function getExplicitNegativeSourceTexts() {
+  return [
+    state.mainSubject,
+    state.textContent,
+    state.negativePrompt,
+    state.quickStyle && QUICK_STYLES[state.quickStyle] ? QUICK_STYLES[state.quickStyle] : "",
+    state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle] ? FASHION_FOOD_STYLES[state.fashionFoodStyle] : "",
+    getCinematicPresetRawText() || ""
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+}
+
+function extractExplicitNegativeFragments(text) {
+  const raw = String(text || "");
+  if (!raw) return [];
+
+  const found = [];
+  const linePatterns = [
+    /(?:^|\n)\s*NEGATIVE:\s*([^\n\r]+)/gim,
+    /(?:^|\n)\s*negative:\s*([^\n\r]+)/gim
+  ];
+  linePatterns.forEach((pattern) => {
+    let match;
+    while ((match = pattern.exec(raw)) !== null) {
+      const value = String(match[1] || "").trim();
+      if (value) found.push(value);
+    }
+  });
+
+  const mjPattern = /--no\s+(.+?)(?=\s--[a-z]|$|\n)/gi;
+  let mjMatch;
+  while ((mjMatch = mjPattern.exec(raw)) !== null) {
+    const value = String(mjMatch[1] || "").trim().replace(/[.,;:]+$/g, "");
+    if (value) found.push(value);
+  }
+
+  return Array.from(new Set(found));
+}
+
+function resolveSerializedNegativePrompt(model) {
+  if (!modelSupportsNegativePrompt(model)) return undefined;
+  const explicitNegative = String(state.negativePrompt || "").trim();
+  if (explicitNegative) return explicitNegative;
+
+  const recovered = Array.from(new Set(
+    getExplicitNegativeSourceTexts()
+      .flatMap((text) => extractExplicitNegativeFragments(text))
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  ));
+
+  return recovered.length ? recovered.join(", ") : undefined;
 }
 
 function buildParametersPayload() {
@@ -3705,6 +3816,7 @@ function buildParametersPayload() {
     fashion_food_style_profile: buildPresetProfileFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES),
     emotion: state.emotion || undefined,
     cinematic_preset: state.cinematicPreset || undefined,
+    cinematic_preset_profile: getCinematicPresetProfile(),
     audio: {
       ambience: state.ambience || undefined,
       foley: state.foley || undefined,
@@ -3754,7 +3866,7 @@ function buildNBPRequestPayload(targetModel) {
   const prompt = buildNBPScenePrompt(subject);
   const nbpAspectRatio = normalizeNBPAspectRatio(getEffectiveAspectRatio(), payloadModel);
   const userNumImages = resolveUserNumImages();
-  const negativePrompt = (state.negativePrompt || "").trim();
+  const negativePrompt = resolveSerializedNegativePrompt(payloadModel);
   const renderBoost = buildRenderBoostPayload();
   const referencesPayload = buildReferencesPayload(payloadModel, payloadModel);
 
@@ -3781,14 +3893,13 @@ function buildNBPRequestPayload(targetModel) {
 }
 
 function buildJson() {
-  const negativePrompt = (state.negativePrompt || "").trim();
   const resolvedModel = normalizeAiModelValue(state.aiModel || "");
   const activeModelForCapabilities = resolvedModel || (state.quickStyle ? getDefaultAiModel() : (state.aiModel || ""));
   const payloadModel = resolvedModel || (state.quickStyle ? getDefaultAiModel() : "");
+  const negativePrompt = resolveSerializedNegativePrompt(activeModelForCapabilities);
   if (payloadModel && getModelPayloadMode(payloadModel) === "nbp") {
     return buildNBPRequestPayload(payloadModel);
   }
-  const modelSupportsNeg = modelSupportsNegativePrompt(activeModelForCapabilities);
   const engineParams = buildEngineParamsPayload(resolvedModel);
   const referencesPayload = buildReferencesPayload(activeModelForCapabilities, resolvedModel);
   const effectiveAspectRatio = getEffectiveAspectRatio();
@@ -3813,7 +3924,7 @@ function buildJson() {
     seed: state.seed || null,
     engine_params: engineParams || null,
     references: referencesPayload,
-    negative: modelSupportsNeg ? (negativePrompt || "") : undefined
+    negative: negativePrompt
   };
 
   if (state.grid3x3Mode) {
@@ -3849,7 +3960,7 @@ function shouldRequireJsonFieldForCurrentState(key, resolvedModel, activeModelFo
     case "references":
       return !!pruneEmptyFields(buildReferencesPayload(activeModelForCapabilities, resolvedModel));
     case "negative":
-      return !!(modelSupportsNegativePrompt(activeModelForCapabilities) && (state.negativePrompt || "").trim());
+      return !!resolveSerializedNegativePrompt(activeModelForCapabilities);
     default:
       return true;
   }
@@ -4027,8 +4138,8 @@ function buildG4ForNBP(basePromptText) {
   const styleParts = [state.photoStyle, state.cinemaStyle, state.directorStyle, (state.artStyle && window.ART_STYLES_MAP ? window.ART_STYLES_MAP[state.artStyle] : "")].filter(Boolean).join(", ");
 
   let stylePreset = "";
-  if (state.quickStyle && QUICK_STYLES[state.quickStyle]) stylePreset = QUICK_STYLES[state.quickStyle];
-  if (state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle]) stylePreset = FASHION_FOOD_STYLES[state.fashionFoodStyle];
+  const activePresetPromptTexts = getActivePresetPromptTexts();
+  if (activePresetPromptTexts.length) stylePreset = activePresetPromptTexts.join(". ");
 
   const res = state.resolution || "4K";
   const subject = state.mainSubject || "the subject";
@@ -4167,8 +4278,7 @@ function build3x3ForNBP(_basePromptText) {
   const aperture = (state.aperture || "").trim();
   const colorParts = [state.colorPalette, state.filmStock && FILM_STOCKS[state.filmStock] ? FILM_STOCKS[state.filmStock] : ""].filter(Boolean);
   const styleParts = [
-    state.quickStyle && QUICK_STYLES[state.quickStyle] ? QUICK_STYLES[state.quickStyle] : "",
-    state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle] ? FASHION_FOOD_STYLES[state.fashionFoodStyle] : "",
+    ...getActivePresetPromptTexts(),
     state.photoStyle,
     state.cinemaStyle,
     state.directorStyle,
@@ -4232,8 +4342,7 @@ function build3x3FlatForNBP(_basePromptText) {
   const aperture = state.aperture || "f/2.8";
   const colorParts = [state.colorPalette, state.filmStock && FILM_STOCKS[state.filmStock] ? FILM_STOCKS[state.filmStock] : ""].filter(Boolean);
   const styleParts = [
-    state.quickStyle && QUICK_STYLES[state.quickStyle] ? QUICK_STYLES[state.quickStyle] : "",
-    state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle] ? FASHION_FOOD_STYLES[state.fashionFoodStyle] : "",
+    ...getActivePresetPromptTexts(),
     state.photoStyle,
     state.cinemaStyle,
     state.directorStyle,

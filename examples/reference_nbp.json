@@ -1,0 +1,9 @@
+{
+  "model": "nano-banana-pro",
+  "type": "text-to-image",
+  "subject": "studio portrait of an astronaut under neon rain",
+  "prompt": "studio portrait of an astronaut under neon rain",
+  "resolution": "1K",
+  "aspect_ratio": "1:1",
+  "num_images": 1
+}

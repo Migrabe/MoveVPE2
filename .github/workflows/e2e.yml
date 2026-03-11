@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run NBP JSON contract checks
+        run: npm run test:nbp-json
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 

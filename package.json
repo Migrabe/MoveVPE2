@@ -8,9 +8,14 @@
     "start": "node server.js",
     "dev": "node server.js",
     "playwright:install": "node ./node_modules/playwright/cli.js install chromium firefox webkit",
+    "test:nbp-json": "node scripts/verify-nbp-json.js",
     "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
+    "test:e2e:fresh": "node scripts/run-playwright.js full --port=3100",
     "test:e2e:headed": "node ./node_modules/@playwright/test/cli.js test --headed",
-    "test:e2e:smoke": "node ./node_modules/@playwright/test/cli.js test e2e/smoke.spec.js"
+    "test:e2e:reuse": "node scripts/run-playwright.js full --reuse",
+    "test:e2e:smoke": "node ./node_modules/@playwright/test/cli.js test e2e/smoke.spec.js",
+    "test:e2e:smoke:fresh": "node scripts/run-playwright.js smoke --port=3100",
+    "test:e2e:smoke:reuse": "node scripts/run-playwright.js smoke --reuse"
   },
   "dependencies": {
     "cors": "^2.8.5",
