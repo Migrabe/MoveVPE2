@@ -23,6 +23,7 @@ import {
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const isProduction = process.env.NODE_ENV === "production";
+const BUILD_ID = "20260311-2230-110a318";
 const apiWriteLimiter = rateLimit({
   windowMs: 60_000,
   max: 120,
@@ -88,6 +89,7 @@ function setVersionCookie(res, preferDesktop) {
 }
 
 app.use((req, res, next) => {
+  res.setHeader("X-VPE-Build", BUILD_ID);
   res.setHeader("Accept-CH", "Sec-CH-UA-Mobile, Sec-CH-UA-Platform");
   res.append("Vary", "User-Agent");
   res.append("Vary", "Sec-CH-UA-Mobile");
@@ -153,10 +155,15 @@ app.get(["/m", "/m/", "/mobile-latest", "/mobile/latest"], (req, res) => {
   res.sendFile(path.join(publicDir, "mobile", "index.html"));
 });
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "vpe-prompt-builder", uptime_seconds: Math.round(process.uptime()) });
+  res.json({
+    status: "ok",
+    service: "vpe-prompt-builder",
+    uptime_seconds: Math.round(process.uptime()),
+    build: BUILD_ID
+  });
 });
 app.get("/ready", (_req, res) => {
-  res.json({ ready: true });
+  res.json({ ready: true, build: BUILD_ID });
 });
 app.get("/api/ui/buttons", (req, res) => {
   res.sendFile(path.join(publicDir, "config", "ui-buttons.json"));
