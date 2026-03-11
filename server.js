@@ -121,7 +121,8 @@ app.use(express.static(publicDir, {
   etag: false,
   maxAge: "0",
   setHeaders: (res, filePath) => {
-    if (String(filePath).endsWith(".html")) {
+    const p = String(filePath || "").toLowerCase();
+    if (p.endsWith(".html") || p.endsWith(".css") || p.endsWith(".js")) {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
@@ -138,6 +139,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
 });
 app.get(["/mobile", "/mobile/"], (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  res.sendFile(path.join(publicDir, "mobile", "index.html"));
+});
+app.get(["/m", "/m/", "/mobile-latest", "/mobile/latest"], (req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
