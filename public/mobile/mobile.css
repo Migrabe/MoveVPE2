@@ -5013,3 +5013,54 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
     body.mobile-vpe-shell.vpe-lite .mobile-safe-spacer {
       height: calc(88px + env(safe-area-inset-bottom)) !important;
     }
+
+    /* Hard override: keep max consistency controls in one line for both old/new DOM */
+    html body.mobile-vpe-shell #generationModeSection.generation-inline > .section-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      width: 100% !important;
+    }
+
+    html body.mobile-vpe-shell #generationModeSection.generation-inline > .section-header > h2,
+    html body.mobile-vpe-shell #generationModeSection.generation-inline > .section-header > .generation-inline-title {
+      display: inline-flex !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+    }
+
+    html body.mobile-vpe-shell #generationModeSection.generation-inline .generation-inline-header-tools {
+      display: inline-flex !important;
+      align-items: center !important;
+      width: auto !important;
+      flex: 0 0 auto !important;
+      justify-content: flex-end !important;
+      gap: 8px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    html body.mobile-vpe-shell #generationModeSection.generation-inline .generation-inline-switch {
+      margin: 0 !important;
+      min-height: 30px !important;
+      height: 30px !important;
+      padding: 3px 6px !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      white-space: nowrap !important;
+      line-height: 1 !important;
+    }
+
+    html body.mobile-vpe-shell #generationModeSection.generation-inline .generation-inline-title .generation-inline-switch {
+      margin-left: auto !important;
+    }
