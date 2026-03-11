@@ -4805,3 +4805,106 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       padding: 10px 14px !important;
       line-height: 1.2 !important;
     }
+
+    /* Lite fallback for Opera Mini / low-capability engines */
+    body.mobile-vpe-shell.vpe-lite {
+      background: #051425 !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite::before,
+    body.mobile-vpe-shell.vpe-lite .orb {
+      display: none !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .header,
+    body.mobile-vpe-shell.vpe-lite .section,
+    body.mobile-vpe-shell.vpe-lite .constructor-card,
+    body.mobile-vpe-shell.vpe-lite .mobile-bottom-bar,
+    body.mobile-vpe-shell.vpe-lite .option-btn,
+    body.mobile-vpe-shell.vpe-lite .btn,
+    body.mobile-vpe-shell.vpe-lite .toggle-label {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      filter: none !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .header {
+      position: static !important;
+      top: auto !important;
+      padding: 10px 12px !important;
+      border-radius: 14px !important;
+      background: #102842 !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .header-left {
+      width: 100% !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      gap: 8px !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .logo {
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 12px !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .brand-line h1,
+    body.mobile-vpe-shell.vpe-lite .header h1 {
+      font-size: 1.05rem !important;
+      line-height: 1.12 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .header-right {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .header-right .option-btn,
+    body.mobile-vpe-shell.vpe-lite #headerUndoBtn {
+      min-height: 36px !important;
+      height: 36px !important;
+      padding: 6px 8px !important;
+      border-radius: 10px !important;
+      font-size: 0.86rem !important;
+      line-height: 1.05 !important;
+      overflow: visible !important;
+      background: #17375a !important;
+      border-color: rgba(136, 189, 255, 0.45) !important;
+      color: #d9ecff !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite #generationModeSection.generation-inline {
+      padding: 8px 10px !important;
+      border-radius: 12px !important;
+      background: #173152 !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite #generationModeSection.generation-inline .section-header {
+      min-height: 34px !important;
+      gap: 8px !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite #generationModeSection .generation-inline-title {
+      font-size: 0.98rem !important;
+      line-height: 1.2 !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite #generationModeSection .generation-inline-switch {
+      background: #102235 !important;
+      border-color: rgba(132, 185, 255, 0.5) !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .help-tip {
+      background: #204469 !important;
+      border-color: rgba(141, 193, 255, 0.55) !important;
+      color: #d4eaff !important;
+    }

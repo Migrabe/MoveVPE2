@@ -1222,6 +1222,28 @@ function isTouchLikeTooltipMode() {
   return document.body.classList.contains("mobile-vpe-shell") || window.matchMedia("(hover: none), (pointer: coarse)").matches;
 }
 
+function shouldUseLiteMobileStyles() {
+  if (!document.body.classList.contains("mobile-vpe-shell")) return false;
+
+  const ua = String(navigator.userAgent || "");
+  const isOperaMini = /opera mini|opr\/mini|opios|opra/i.test(ua);
+  const supportsApi = !!(window.CSS && typeof window.CSS.supports === "function");
+  const hasBackdropSupport = supportsApi && (
+    window.CSS.supports("backdrop-filter: blur(2px)") ||
+    window.CSS.supports("-webkit-backdrop-filter: blur(2px)")
+  );
+  const hasHasSelectorSupport = supportsApi && window.CSS.supports("selector(:has(*))");
+
+  // Lite mode for Opera Mini and engines missing key modern CSS primitives.
+  return isOperaMini || !hasBackdropSupport || !hasHasSelectorSupport;
+}
+
+function applyLiteMobileStylesClass() {
+  const enableLite = shouldUseLiteMobileStyles();
+  document.body.classList.toggle("vpe-lite", enableLite);
+  document.documentElement.classList.toggle("vpe-lite", enableLite);
+}
+
 let mobileHelpPopover = null;
 
 function ensureMobileHelpPopover() {
@@ -2033,6 +2055,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (css2 && window.location.protocol === "file:") {
     css2.href = "file:///C:/Users/TOT/Documents/Grav4/VideoPrompt/css2";
   }
+
+  applyLiteMobileStylesClass();
 
   window.taxonomyRules = [];
   fetch(getSharedConfigUrl("taxonomy-rules.json"))
