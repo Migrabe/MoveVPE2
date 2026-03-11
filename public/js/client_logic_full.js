@@ -1261,6 +1261,28 @@ function normalizeMaxConsistencyInlineRow() {
   if (!title.contains(helpTip)) title.appendChild(helpTip);
 
   section.classList.add("inline-normalized");
+
+  // Force one-line layout even when old cached CSS is still applied.
+  header.style.setProperty("display", "flex", "important");
+  header.style.setProperty("align-items", "center", "important");
+  header.style.setProperty("justify-content", "space-between", "important");
+  header.style.setProperty("flex-wrap", "nowrap", "important");
+  header.style.setProperty("gap", "8px", "important");
+
+  title.style.setProperty("display", "inline-flex", "important");
+  title.style.setProperty("align-items", "center", "important");
+  title.style.setProperty("flex-wrap", "nowrap", "important");
+  title.style.setProperty("width", "100%", "important");
+  title.style.setProperty("min-width", "0", "important");
+  title.style.setProperty("gap", "8px", "important");
+
+  toggleLabel.style.setProperty("margin-left", "auto", "important");
+  toggleLabel.style.setProperty("margin-top", "0", "important");
+  helpTip.style.setProperty("margin-left", "0", "important");
+  helpTip.style.setProperty("margin-top", "0", "important");
+
+  const tools = header.querySelector(".generation-inline-header-tools");
+  if (tools) tools.style.setProperty("display", "none", "important");
 }
 
 let mobileHelpPopover = null;
@@ -2077,6 +2099,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   applyLiteMobileStylesClass();
   normalizeMaxConsistencyInlineRow();
+  setTimeout(normalizeMaxConsistencyInlineRow, 120);
+  window.addEventListener("load", normalizeMaxConsistencyInlineRow);
 
   window.taxonomyRules = [];
   fetch(getSharedConfigUrl("taxonomy-rules.json"))
