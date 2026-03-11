@@ -122,7 +122,7 @@ app.use(express.static(publicDir, {
   maxAge: "0",
   setHeaders: (res, filePath) => {
     const p = String(filePath || "").toLowerCase();
-    if (p.endsWith(".html") || p.endsWith(".css") || p.endsWith(".js")) {
+    if (p.endsWith(".html") || p.endsWith(".css") || p.endsWith(".js") || p.endsWith(".json")) {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");

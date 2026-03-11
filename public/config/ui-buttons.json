@@ -65,7 +65,7 @@
       }
     },
     "seed-clear": {
-      "label": "",
+      "label": "Очистить",
       "icon": "x",
       "styles": {
         "minWidth": "auto",

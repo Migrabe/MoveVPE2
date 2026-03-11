@@ -4819,6 +4819,70 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       line-height: 1.2 !important;
     }
 
+    /* Special modes: one horizontal row per option (no 2x2 grid) */
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      flex-wrap: nowrap !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label {
+      width: 100% !important;
+      min-height: 46px !important;
+      padding: 10px 12px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+      flex-wrap: nowrap !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label > span:first-child {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      line-height: 1.2 !important;
+    }
+
+    /* Seed controls in one compact row */
+    body.mobile-vpe-shell #specialModesSection #seedInput.input-field {
+      min-height: 44px !important;
+      height: 44px !important;
+      padding: 10px 12px !important;
+      max-width: none !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .seed-row {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .seed-row #seedInput {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .seed-row #randomSeedBtn,
+    body.mobile-vpe-shell #specialModesSection .seed-row #clearSeedBtn {
+      min-height: 44px !important;
+      height: 44px !important;
+      padding: 0 12px !important;
+      white-space: nowrap !important;
+      line-height: 1 !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .seed-row #randomSeedBtn .vpe-btn-label,
+    body.mobile-vpe-shell #specialModesSection .seed-row #clearSeedBtn .vpe-btn-label {
+      white-space: nowrap !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+
     /* Lite fallback for Opera Mini / low-capability engines */
     body.mobile-vpe-shell.vpe-lite {
       background: #051425 !important;

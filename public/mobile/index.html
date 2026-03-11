@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Manrope:wght@500;600;700;800&family=Raleway:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <link id="css2LocalLink" rel="stylesheet">
-  <link rel="stylesheet" href="mobile.css?v=20260311-2">
+  <link rel="stylesheet" href="mobile.css?v=20260311-3">
 </head>
 
 <body class="developer-suite mobile-vpe-shell">
@@ -1789,26 +1789,22 @@
                       с Motion Blur.</span></span></h2>
               </div>
               <div class="section-content">
-                <div class="toggle-row">
+                <div class="toggle-row special-modes-list">
                   <label class="toggle-label" id="generateFourModeLabel"
-                    style="flex:1; display:flex; justify-content:space-between; font-weight:bold; color:var(--accent-light);"
-                    title="">
+                    style="font-weight:bold; color:var(--accent-light);" title="">
                     <span>🎬 4 Вариации (Gen 4)</span>
                     <input type="checkbox" id="generateFourMode">
                   </label>
                   <label class="toggle-label" id="grid3x3ModeLabel"
-                    style="flex:1; display:flex; justify-content:space-between; font-weight:bold; color:var(--green);"
-                    title="">
+                    style="font-weight:bold; color:var(--green);" title="">
                     <span>📐 Контакт-лист 3×3</span>
                     <input type="checkbox" id="grid3x3Mode">
                   </label>
-                  <label class="toggle-label" id="beforeAfterLabel"
-                    style="flex:1; display:flex; justify-content:space-between;" title="">
+                  <label class="toggle-label" id="beforeAfterLabel" title="">
                     <span>До/После</span>
                     <input type="checkbox" id="beforeAfter">
                   </label>
-                  <label class="toggle-label" id="seamlessPatternLabel"
-                    style="flex:1; display:flex; justify-content:space-between;" title="">
+                  <label class="toggle-label" id="seamlessPatternLabel" title="">
                     <span>Бесшовный узор</span>
                     <input type="checkbox" id="seamlessPattern">
                   </label>
@@ -1820,7 +1816,7 @@
                       идентичный результат. Используется для воспроизводимости и итераций. В Midjourney: --seed N, в
                       SD: seed
                       parameter. Оставьте пустым для случайного.</span></span></span>
-                <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+                <div class="seed-row" style="display:flex;gap:8px;align-items:center;margin-top:4px;">
                   <input type="number" class="input-field" id="seedInput" placeholder="Пусто = случайный"
                     style="flex:1;max-width:220px" min="0" max="4294967295" autocomplete="off" oninput="handleInput()">
                   <button class="btn btn-ghost action-btn" id="randomSeedBtn" data-action-id="seed-random"></button>
@@ -2204,10 +2200,10 @@
       <script>
         window.VPE_CONFIG_BASE_URL = "../config";
       </script>
-      <script src="../js/client_logic_full.js?v=20260311-2"></script>
-      <script src="../js/action-buttons.js?v=20260311-2"></script>
-      <script src="../js/section-visibility.js?v=20260311-2"></script>
-      <script src="js/mobile-shell.js?v=20260311-2"></script>
+      <script src="../js/client_logic_full.js?v=20260311-3"></script>
+      <script src="../js/action-buttons.js?v=20260311-3"></script>
+      <script src="../js/section-visibility.js?v=20260311-3"></script>
+      <script src="js/mobile-shell.js?v=20260311-3"></script>
       <div class="notification success" id="notification" role="status" aria-live="polite" aria-atomic="true">Всё
         сброшено</div>
       <div class="mobile-safe-spacer" aria-hidden="true"></div>
