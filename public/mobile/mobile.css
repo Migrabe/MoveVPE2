@@ -4448,15 +4448,19 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
     }
 
     body.mobile-vpe-shell #generationModeSection.generation-inline .section-header {
-      align-items: flex-start !important;
-      flex-wrap: wrap !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
       gap: 10px !important;
     }
 
     body.mobile-vpe-shell #generationModeSection .generation-inline-header-tools {
-      width: 100%;
-      justify-content: space-between !important;
+      width: auto !important;
+      justify-content: flex-end !important;
       gap: 10px !important;
+    }
+
+    body.mobile-vpe-shell #generationModeSection.inline-normalized .generation-inline-header-tools {
+      display: none !important;
     }
 
     body.mobile-vpe-shell #generationModeSection .generation-inline-switch {

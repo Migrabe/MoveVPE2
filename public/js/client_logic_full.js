@@ -1244,6 +1244,25 @@ function applyLiteMobileStylesClass() {
   document.documentElement.classList.toggle("vpe-lite", enableLite);
 }
 
+function normalizeMaxConsistencyInlineRow() {
+  const section = document.getElementById("generationModeSection");
+  if (!section) return;
+  const header = section.querySelector(".section-header");
+  if (!header) return;
+
+  const title = header.querySelector("h2");
+  const toggleLabel = header.querySelector("#maxConsistencyLabel");
+  const helpTip = header.querySelector(".help-tip");
+  if (!title || !toggleLabel || !helpTip) return;
+
+  title.classList.add("generation-inline-title");
+
+  if (!title.contains(toggleLabel)) title.appendChild(toggleLabel);
+  if (!title.contains(helpTip)) title.appendChild(helpTip);
+
+  section.classList.add("inline-normalized");
+}
+
 let mobileHelpPopover = null;
 
 function ensureMobileHelpPopover() {
@@ -2057,6 +2076,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   applyLiteMobileStylesClass();
+  normalizeMaxConsistencyInlineRow();
 
   window.taxonomyRules = [];
   fetch(getSharedConfigUrl("taxonomy-rules.json"))
