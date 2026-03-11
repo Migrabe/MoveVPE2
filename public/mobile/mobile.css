@@ -4833,16 +4833,15 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
     body.mobile-vpe-shell.vpe-lite .header {
       position: static !important;
       top: auto !important;
-      padding: 56px 12px 10px !important;
-      border-radius: 14px !important;
-      background: #102842 !important;
+      padding: 50px 8px 4px !important;
+      border-radius: 10px !important;
+      background: transparent !important;
+      border: none !important;
+      gap: 4px !important;
     }
 
     body.mobile-vpe-shell.vpe-lite .header-left {
-      width: 100% !important;
-      min-width: 0 !important;
-      overflow: hidden !important;
-      gap: 8px !important;
+      display: none !important;
     }
 
     body.mobile-vpe-shell.vpe-lite .logo {
@@ -4873,6 +4872,10 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       gap: 8px !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+
+    body.mobile-vpe-shell.vpe-lite .main-layout {
+      margin-top: 2px !important;
     }
 
     body.mobile-vpe-shell.vpe-lite .header-right .option-btn,
