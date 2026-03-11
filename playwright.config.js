@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const CI = Boolean(process.env.CI);
 const isWindows = process.platform === "win32";
+const playwrightPort = Number(process.env.PLAYWRIGHT_PORT || 3000);
+const baseURL = `http://localhost:${playwrightPort}`;
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "1";
 
 function toWslPath(pathname) {
   const normalized = pathname.replace(/\\/g, "/");
@@ -12,8 +15,8 @@ function toWslPath(pathname) {
 }
 
 const localServerCommand = isWindows
-  ? `wsl -e bash -lc "cd '${toWslPath(process.cwd())}' && npm start"`
-  : "npm start";
+  ? `wsl -e bash -lc "cd '${toWslPath(process.cwd())}' && PORT=${playwrightPort} npm start"`
+  : `PORT=${playwrightPort} npm start`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -26,7 +29,7 @@ export default defineConfig({
   retries: CI ? 2 : 0,
   reporter: CI ? [["html", { open: "never" }], ["list"]] : [["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "on-first-retry"
   },
   projects: [
@@ -45,8 +48,8 @@ export default defineConfig({
   ],
   webServer: {
     command: localServerCommand,
-    url: "http://localhost:3000/health",
-    reuseExistingServer: !CI,
+    url: `${baseURL}/health`,
+    reuseExistingServer,
     timeout: 60_000
   }
 });

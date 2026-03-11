@@ -660,7 +660,7 @@ const initialState = {
   lens: "", focalLength: "", aperture: "", angle: "", shotSize: "", composition: "", quality: "",
   mood: "",
   lighting: [], lightType: "", lightScheme: "", lightFX: [], colorPalette: "", skinDetail: [], hairDetail: [], material: [], typography: [],
-  mainSubject: "", textContent: "", negativePrompt: "",
+  subjectWho: "", mainSubject: "", textContent: "", negativePrompt: "",
   quickStyle: "", fashionFoodStyle: "",
   emotion: "",
   generateFourMode: false, grid3x3Mode: false, maxConsistency: false, beforeAfter: false, seamlessPattern: false, seed: "",
@@ -1530,6 +1530,7 @@ function applyStateSnapshot(snapshot) {
     if (label) label.textContent = String(value);
   };
 
+  setValue("subjectWho", restored.subjectWho || "");
   setValue("mainSubject", restored.mainSubject || "");
   setValue("textContent", restored.textContent || "");
   setValue("negativePrompt", restored.negativePrompt || "");
@@ -2318,17 +2319,63 @@ function handleInput() { updateAll(); }
 // TRANSLATE SCENE - via backend /api/translate
 // =============================================
 async function translateScene() {
-  var textarea = $("mainSubject");
-  var text = textarea.value.trim();
+  var whoInput = $("subjectWho");
+  var actionInput = $("mainSubject");
+  var whoText = whoInput ? whoInput.value.trim() : "";
+  var actionText = actionInput ? actionInput.value.trim() : "";
   var status = $("translateStatus");
   var btn = $("translateBtn");
 
-  if (!text) { notify("Поле пустое", "warn"); return; }
+  if (!whoText && !actionText) { notify("Поля пустые", "warn"); return; }
 
-  // Detect if already English
-  var nonAscii = text.replace(/[a-zA-Z0-9\s.,!?;:\'"()\-\/\\@#$%^&*=+\[\]{}|<>~`]/g, "");
-  if (nonAscii.length < text.length * 0.15) {
-    notify("Текст уже на английском", "warn");
+  function isLikelyEnglish(text) {
+    if (!text) return true;
+    var nonAscii = text.replace(/[a-zA-Z0-9\s.,!?;:\'"()\-\/\\@#$%^&*=+\[\]{}|<>~`]/g, "");
+    return nonAscii.length < text.length * 0.15;
+  }
+
+  async function translateTextViaClient(text) {
+    var directResponse = await fetch(getClientTranslateUrl(text), { method: "GET" });
+    var directData = await directResponse.json();
+    if (!directResponse.ok) {
+      throw new Error(directData && directData.error ? directData.error : "HTTP " + directResponse.status);
+    }
+    var translated = String(directData?.responseData?.translatedText || "").trim();
+    if (!translated) throw new Error("Пустой ответ перевода");
+    return translated;
+  }
+
+  async function translateTextViaBackend(text) {
+    var response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, to: "en" })
+    });
+    var data = await response.json();
+    if (!response.ok) {
+      throw new Error(data && data.error ? data.error : "HTTP " + response.status);
+    }
+    var translated = data && data.text ? String(data.text) : "";
+    if (!translated) throw new Error("Пустой ответ перевода");
+    return translated;
+  }
+
+  function normalizeTranslatedText(text) {
+    var result = String(text || "").trim();
+    if (result === result.toUpperCase() && result.length > 20) {
+      result = result.charAt(0).toUpperCase() + result.slice(1).toLowerCase();
+    }
+    return result;
+  }
+
+  var targets = [
+    { key: "subjectWho", label: "Кто", input: whoInput, original: whoText },
+    { key: "mainSubject", label: "Что делает", input: actionInput, original: actionText }
+  ].filter(function (item) { return !!item.input && !!item.original; });
+
+  var toTranslate = targets.filter(function (item) { return !isLikelyEnglish(item.original); });
+  if (!toTranslate.length) {
+    notify("Оба поля уже на английском", "warn");
     return;
   }
 
@@ -2338,20 +2385,18 @@ async function translateScene() {
     status.style.color = "var(--accent-light)";
 
     try {
-      var directResponse = await fetch(getClientTranslateUrl(text), { method: "GET" });
-      var directData = await directResponse.json();
-      if (!directResponse.ok) {
-        throw new Error(directData && directData.error ? directData.error : "HTTP " + directResponse.status);
+      for (var i = 0; i < toTranslate.length; i++) {
+        var target = toTranslate[i];
+        status.textContent = "Переводим (" + target.label + ") через MyMemory...";
+        var translatedClient = await translateTextViaClient(target.original);
+        translatedClient = normalizeTranslatedText(translatedClient);
+        target.input.value = translatedClient;
+        state[target.key] = translatedClient;
       }
-      var browserTranslated = String(directData?.responseData?.translatedText || "").trim();
-      if (!browserTranslated) throw new Error("Пустой ответ перевода");
-
-      textarea.value = browserTranslated;
-      state.mainSubject = browserTranslated;
       status.textContent = "✅ Переведено";
       status.style.color = "var(--green)";
       updateAll();
-      notify("Текст переведён через MyMemory");
+      notify("Поля переведены через MyMemory");
     } catch (e) {
       console.error("Direct translate error:", e);
       status.textContent = "❌ Ошибка";
@@ -2369,28 +2414,18 @@ async function translateScene() {
   status.style.color = "var(--accent-light)";
 
   try {
-    var response = await fetch("/api/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text, to: "en" })
-    });
-    var data = await response.json();
-    if (!response.ok) {
-      throw new Error(data && data.error ? data.error : "HTTP " + response.status);
+    for (var i = 0; i < toTranslate.length; i++) {
+      var target = toTranslate[i];
+      status.textContent = "Переводим (" + target.label + ")...";
+      var translatedBackend = await translateTextViaBackend(target.original);
+      translatedBackend = normalizeTranslatedText(translatedBackend);
+      target.input.value = translatedBackend;
+      state[target.key] = translatedBackend;
     }
-
-    var translated = data && data.text ? String(data.text) : "";
-    if (!translated) throw new Error("Пустой ответ перевода");
-
-    if (translated === translated.toUpperCase() && translated.length > 20) {
-      translated = translated.charAt(0).toUpperCase() + translated.slice(1).toLowerCase();
-    }
-    textarea.value = translated;
-    state.mainSubject = translated;
     status.textContent = "✅ Переведено";
     status.style.color = "var(--green)";
     updateAll();
-    notify("Текст переведён на английский");
+    notify("Поля переведены на английский");
   } catch (e) {
     status.textContent = "❌ Ошибка";
     status.style.color = "var(--red, #ff7675)";
@@ -2826,12 +2861,29 @@ var CHATGPT_STYLE_MAP = {
 // =============================================
 // BUILD PROMPT — FLAT (universal, recommended)
 // =============================================
-function buildFlatPrompt() {
+function getSceneSubjectText() {
+  return String(state.subjectWho || "").trim();
+}
+
+function getSceneActionText() {
+  return String(state.mainSubject || "").trim();
+}
+
+function getSceneSubjectLine() {
+  return getSceneSubjectText() || getSceneActionText();
+}
+
+function buildFlatPrompt(options) {
+  const opts = options || {};
+  const presetTextMode = opts.presetTextMode === "dedup" ? "dedup" : "full";
   const headers = [];
   const parts = [];
   const effectiveAspectRatio = getEffectiveAspectRatio();
   const manualMode = !state.quickStyle && !state.fashionFoodStyle;
   const motionBlurTemplateMode = !!state.motionBlurMode;
+  const subjectWho = getSceneSubjectText();
+  const subjectAction = getSceneActionText();
+  const sceneSubjectLine = getSceneSubjectLine();
 
   // 1. Headers (Metadata)
   // Aspect ratio & resolution — prepend as metadata tags
@@ -2853,7 +2905,8 @@ function buildFlatPrompt() {
   // Medium (NEW)
   if (state.medium) parts.push(state.medium);
 
-  // NOTE: Main Subject is handled separately below
+  // Action field goes into prompt body; subject field is rendered in dedicated "subject:" line.
+  if (subjectAction && subjectAction !== sceneSubjectLine) parts.push(subjectAction);
 
   // FIX: Quick Style Overlay Logic
   // If Quick Style is active, ignore Camera, Lighting, and Materials
@@ -2905,14 +2958,20 @@ function buildFlatPrompt() {
   }
 
   // Quick Style Preset
-  const quickStylePromptText = buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES);
+  const quickStylePromptText = presetTextMode === "dedup"
+    ? buildPresetPromptTextFromMap(state.quickStyle, QUICK_STYLES)
+    : (state.quickStyle && QUICK_STYLES[state.quickStyle] ? String(QUICK_STYLES[state.quickStyle]).trim() : undefined);
   if (quickStylePromptText) parts.push(quickStylePromptText);
   // Fashion & Food Style
-  const fashionFoodPromptText = buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES);
+  const fashionFoodPromptText = presetTextMode === "dedup"
+    ? buildPresetPromptTextFromMap(state.fashionFoodStyle, FASHION_FOOD_STYLES)
+    : (state.fashionFoodStyle && FASHION_FOOD_STYLES[state.fashionFoodStyle] ? String(FASHION_FOOD_STYLES[state.fashionFoodStyle]).trim() : undefined);
   if (fashionFoodPromptText) parts.push(fashionFoodPromptText);
 
   // FIX: Cinematic Presets
-  const cinematicPresetPromptText = getCinematicPresetPromptText();
+  const cinematicPresetPromptText = presetTextMode === "dedup"
+    ? getCinematicPresetPromptText()
+    : (getCinematicPresetRawText() ? String(getCinematicPresetRawText()).trim() : undefined);
   if (cinematicPresetPromptText) parts.push(cinematicPresetPromptText);
 
   // FIX: Audio — Ambience, Foley, Cinematic FX
@@ -2933,8 +2992,8 @@ function buildFlatPrompt() {
   if (headers.length > 0) finalPrompt += headers.join(", ") + "\n";
 
   // Add Subject (on new line with prefix)
-  if (state.mainSubject && state.mainSubject.trim()) {
-    finalPrompt += `subject: ${state.mainSubject.trim()}\n`;
+  if (sceneSubjectLine) {
+    finalPrompt += `subject: ${sceneSubjectLine}\n`;
   }
 
   // EMOTION
@@ -2967,6 +3026,8 @@ function buildStructuredPrompt() {
   let out = "";
   const effectiveAspectRatio = getEffectiveAspectRatio();
   const manualMode = !state.quickStyle && !state.fashionFoodStyle;
+  const subjectWho = String(state.subjectWho || "").trim();
+  const subjectAction = String(state.mainSubject || "").trim();
 
   if (state.aiModel) out += `[Model: ${state.aiModel}]\n`;
   if (effectiveAspectRatio) out += `[Aspect: ${effectiveAspectRatio}]`;
@@ -2983,7 +3044,8 @@ function buildStructuredPrompt() {
 
   if (state.medium) parts.push(state.medium); // NEW
 
-  if (state.mainSubject) parts.push(state.mainSubject.trim());
+  if (subjectWho) parts.push(subjectWho);
+  if (subjectAction) parts.push(subjectAction);
   if (state.emotion) parts.push(`EMOTION: ${EMOTIONS[state.emotion]}`);
   out += parts.filter(Boolean).join(", ") + "\n\n";
 
@@ -3073,9 +3135,12 @@ function buildMidjourneyPrompt() {
   // Structure: [scene/subject], [style cues], [technical], --params
   const desc = [];
   const manualMode = !state.quickStyle && !state.fashionFoodStyle;
+  const subjectWho = String(state.subjectWho || "").trim();
+  const subjectAction = String(state.mainSubject || "").trim();
 
   // Core scene
-  if (state.mainSubject) desc.push(state.mainSubject.trim());
+  if (subjectWho) desc.push(subjectWho);
+  if (subjectAction) desc.push(subjectAction);
   if (state.emotion && EMOTIONS[state.emotion]) desc.push(EMOTIONS[state.emotion]);
 
   // Format/style (only if NOT photorealistic — MJ defaults to photo)
@@ -3248,9 +3313,10 @@ function buildPromptTextForOutput(options) {
     } else {
       // Standard legacy block for other models
       let g4block = GENERATE_FOUR_PREFIX;
-      if (state.mainSubject && state.mainSubject.trim()) {
-        g4block = g4block.replace(/of a subject/g, "of " + state.mainSubject.trim());
-        g4block = g4block.replace(/the Subject/g, state.mainSubject.trim());
+      const sceneSubjectLine = getSceneSubjectLine();
+      if (sceneSubjectLine) {
+        g4block = g4block.replace(/of a subject/g, "of " + sceneSubjectLine);
+        g4block = g4block.replace(/the Subject/g, sceneSubjectLine);
       }
 
       promptText = g4block + "\n\n" + promptText;
@@ -3387,13 +3453,14 @@ function sanitizeNBPSceneText(text) {
 }
 
 function buildNBPSubjectText() {
-  const rawSubject = sanitizeNBPSceneText(state.mainSubject || "");
+  const rawSubject = sanitizeNBPSceneText(getSceneSubjectLine() || "");
   if (!rawSubject) return undefined;
   return rawSubject;
 }
 
 function buildNBPScenePrompt(subjectText) {
   const details = [];
+  const actionText = sanitizeNBPSceneText(getSceneActionText() || "");
   const emotionText = state.emotion && EMOTIONS[state.emotion] ? String(EMOTIONS[state.emotion]).trim() : "";
   const lightingParts = getAllLightingSelections(state)
     .concat(Array.isArray(state.lightFX) ? state.lightFX : [])
@@ -3405,7 +3472,8 @@ function buildNBPScenePrompt(subjectText) {
     .map((value) => sanitizeNBPSceneText(value))
     .filter(Boolean);
 
-  if (subjectText) details.push(subjectText);
+  if (actionText) details.push(actionText);
+  else if (subjectText) details.push(subjectText);
   if (emotionText) details.push(`The expression feels ${emotionText.replace(/[.]+$/g, "").toLowerCase()}.`);
   if (lightingParts.length) details.push(`The scene is lit with ${lightingParts.join(", ")}.`);
   if (moodText) details.push(`The atmosphere feels ${moodText.toLowerCase()}.`);
@@ -3503,7 +3571,7 @@ function resolveUserNumImages() {
 
 function collectAdditionalSelectedOptions() {
   const handledKeys = new Set([
-    "aiModel", "mainSubject", "aspectRatio", "resolution",
+    "aiModel", "subjectWho", "mainSubject", "aspectRatio", "resolution",
     "purpose", "format", "medium", "mood",
     "cameraBody", "lens", "shotSize", "focalLength", "aperture", "angle", "composition",
     "lighting", "lightType", "lightScheme", "lightFX", "colorPalette",
@@ -3721,6 +3789,7 @@ function getActivePresetPromptTexts() {
 
 function getExplicitNegativeSourceTexts() {
   return [
+    state.subjectWho,
     state.mainSubject,
     state.textContent,
     state.negativePrompt,
@@ -3903,12 +3972,12 @@ function buildJson() {
   const engineParams = buildEngineParamsPayload(resolvedModel);
   const referencesPayload = buildReferencesPayload(activeModelForCapabilities, resolvedModel);
   const effectiveAspectRatio = getEffectiveAspectRatio();
-  const jsonPrompt = sanitizePromptForJson(buildPromptTextForOutput({ includeRenderBoostInPrompt: false }));
-  const jsonPromptFlat = sanitizePromptForJson(buildFlatPrompt());
+  const jsonPrompt = sanitizePromptForJson(getSceneActionText() || buildPromptTextForOutput({ includeRenderBoostInPrompt: false }));
+  const jsonPromptFlat = sanitizePromptForJson(buildFlatPrompt({ presetTextMode: "dedup" }));
   const standardPayload = {
     schema: "vpe-prompt-builder-v2",
     model: resolvedModel || null,
-    subject: state.mainSubject || "",
+    subject: getSceneSubjectLine() || "",
     prompt: jsonPrompt,
     prompt_flat: jsonPromptFlat,
     prompt_midjourney: resolvedModel === "midjourney" ? buildMidjourneyPrompt() : undefined,
@@ -4067,6 +4136,7 @@ function countParams() {
   ["aiModel", "cameraBody", "aspectRatio", "resolution", "purpose", "format", "medium", "lens", "shotSize", "focalLength", "aperture", "angle", "composition", "quality", "photoStyle", "cinemaStyle", "directorStyle", "artStyle", "filmStock", "quickStyle", "fashionFoodStyle", "emotion", "mood", "cinematicPreset", "ambience", "foley", "cinematicFx", "lightType", "lightScheme"].forEach(k => { if (state[k]) c++; });
   ["lighting", "lightFX", "skinDetail", "hairDetail", "material", "typography"].forEach(k => { if ((state[k] || []).length) c++; });
   if (state.colorPalette) c++;
+  if ((state.subjectWho || "").trim()) c++;
   if ((state.mainSubject || "").trim()) c++;
   if ((state.textContent || "").trim()) c++;
   if ((state.negativePrompt || "").trim()) c++;
@@ -4142,7 +4212,7 @@ function buildG4ForNBP(basePromptText) {
   if (activePresetPromptTexts.length) stylePreset = activePresetPromptTexts.join(". ");
 
   const res = state.resolution || "4K";
-  const subject = state.mainSubject || "the subject";
+  const subject = getSceneSubjectLine() || "the subject";
   const emotion = state.emotion && EMOTIONS[state.emotion] ? EMOTIONS[state.emotion] : "";
 
   // ---- Negative: встроен в base_scene, не отдельным блоком ----
@@ -4216,7 +4286,7 @@ function buildG4ForNBP(basePromptText) {
 }
 
 function buildG4FlatForNBP(basePromptText) {
-  const subject = state.mainSubject || "the subject";
+  const subject = getSceneSubjectLine() || "the subject";
   const cam = [state.cameraBody, state.lens, state.focalLength, state.aperture].filter(Boolean).join(", ");
   const ar = state.aspectRatio || "16:9";
   const res = state.resolution || "4K";
@@ -4271,7 +4341,7 @@ Three-quarter body from the left. Subject turns, looking over shoulder. Wide ang
 }
 
 function build3x3ForNBP(_basePromptText) {
-  const subject = (state.mainSubject || "").trim() || "[SUBJECT: reference image]";
+  const subject = getSceneSubjectLine() || "[SUBJECT: reference image]";
   const allLights = getAllLightingSelections(state);
   const cameraBody = (state.cameraBody || "").replace(/^shot on\s*/i, "").trim();
   const lens = (state.lens || "").trim();
@@ -4335,7 +4405,7 @@ function build3x3ForNBP(_basePromptText) {
 }
 
 function build3x3FlatForNBP(_basePromptText) {
-  const subject = (state.mainSubject || "").trim() || "[SUBJECT: reference image]";
+  const subject = getSceneSubjectLine() || "[SUBJECT: reference image]";
   const allLights = getAllLightingSelections(state);
   const cameraBody = (state.cameraBody || "Arri Alexa 35").replace(/^shot on\s*/i, "").trim();
   const lens = state.lens || "35mm lens equivalent";
@@ -4391,6 +4461,7 @@ function syncMotionBlurUI() {
 function updateAll() {
   // 1. Sync raw text inputs to state
   const prevStateSnapshot = deepClone(state);
+  state.subjectWho = $("subjectWho") ? ($("subjectWho").value || "") : (state.subjectWho || "");
   state.mainSubject = $("mainSubject").value || "";
   state.textContent = $("textContent").value || "";
   state.negativePrompt = $("negativePrompt").value || "";
@@ -5269,7 +5340,7 @@ function saveJson() {
 }
 
 function resetAll() {
-  ["aiModel", "cameraBody", "aspectRatio", "resolution", "purpose", "format", "medium", "lens", "focalLength", "shotSize", "aperture", "angle", "composition", "quality", "colorPalette", "mood", "photoStyle", "cinemaStyle", "directorStyle", "artStyle", "filmStock", "quickStyle", "fashionFoodStyle", "mainSubject", "textContent", "negativePrompt", "emotion", "cinematicPreset", "ambience", "foley", "cinematicFx", "lightType", "lightScheme", "motionBlurCharacter", "motionBlurLocation", "motionBlurBackground", "motionBlurForeground"].forEach(k => state[k] = "");
+  ["aiModel", "cameraBody", "aspectRatio", "resolution", "purpose", "format", "medium", "lens", "focalLength", "shotSize", "aperture", "angle", "composition", "quality", "colorPalette", "mood", "photoStyle", "cinemaStyle", "directorStyle", "artStyle", "filmStock", "quickStyle", "fashionFoodStyle", "subjectWho", "mainSubject", "textContent", "negativePrompt", "emotion", "cinematicPreset", "ambience", "foley", "cinematicFx", "lightType", "lightScheme", "motionBlurCharacter", "motionBlurLocation", "motionBlurBackground", "motionBlurForeground"].forEach(k => state[k] = "");
   state.lighting = []; state.lightFX = []; state.colorPalette = ""; state.skinDetail = []; state.hairDetail = []; state.material = []; state.typography = [];
   state.generateFourMode = false; state.grid3x3Mode = false; state.maxConsistency = false; state.beforeAfter = false; state.seamlessPattern = false; state.motionBlurMode = false; state.motionBlurBackgroundEnabled = false; state.motionBlurForegroundEnabled = false; state.seed = "";
   state.mjVersion = "7"; state.mjStyle = ""; state.mjStylize = 250; state.mjChaos = 0; state.mjWeird = 0; state.mjSref = "";
@@ -5284,6 +5355,7 @@ function resetAll() {
   activeEditablePresetIndex = null;
 
   // Reset inputs
+  if ($("subjectWho")) $("subjectWho").value = "";
   $("mainSubject").value = "";
   $("textContent").value = "";
   $("negativePrompt").value = "";
@@ -5372,8 +5444,25 @@ async function enhancePrompt() {
     return;
   }
   const ta = document.getElementById('mainSubject');
+  const whoInput = document.getElementById('subjectWho');
   const text = ta.value.trim();
+  const whoText = (whoInput && whoInput.value ? whoInput.value : "").trim();
   if (!text) { ta.placeholder = 'Сначала введите идею...'; return; }
+
+  function inferGenderHint(subject) {
+    const s = String(subject || "").toLowerCase();
+    if (!s) return "unknown";
+    if (/\b(he|him|his|man|male|boy|gentleman|father|husband|actor)\b/.test(s)) return "male";
+    if (/\b(she|her|hers|woman|female|girl|lady|mother|wife|actress)\b/.test(s)) return "female";
+    if (/(муж|мужчина|парень|юноша|отец|сын|актер|актёр|герой)/.test(s)) return "male";
+    if (/(жен|женщина|девушк|дочь|мать|актриса|героиня)/.test(s)) return "female";
+    return "unknown";
+  }
+
+  const genderHint = inferGenderHint(whoText);
+  let genderRule = "Keep neutral wording if gender is unclear.";
+  if (genderHint === "male") genderRule = "Use masculine wording/pronouns where applicable.";
+  if (genderHint === "female") genderRule = "Use feminine wording/pronouns where applicable.";
 
   const btn = document.getElementById('enhanceBtn');
   const originalContent = btn.textContent;
@@ -5389,11 +5478,14 @@ async function enhancePrompt() {
     // System prompt construction
     const currentModel = state.aiModel || "General";
     const systemPrompt = `You are a professional video prompt engineer.
-Expand this scene description into a detailed visual prompt.
-Structure: [Subject/Character details] + [Environment/Location] + [Lighting/Atmosphere] + [Action/Pose].
-Keep it concise but vivid (under 150 words). Write ONLY the improved prompt.
+Improve ONLY the action/scene text for a prompt field called "What does?".
+Do NOT copy or inject the literal "Who?" value into the output.
+Use "Who?" only as grammatical context (gender/pronouns/role agreement).
+${genderRule}
+Keep it concise but vivid (under 150 words). Write ONLY the improved action text.
 Target Model: ${currentModel}
-Original idea: "${text}"`;
+Who? context: "${whoText || "not provided"}"
+Original action idea: "${text}"`;
 
     // Call server-side enhance endpoint (keeps API key secure)
     const res = await fetch('/api/enhance', {

@@ -20,6 +20,24 @@ test("health and desktop/mobile routes respond", async ({ request }) => {
   expect(health.ok()).toBeTruthy();
   await expect.soft(health.json()).resolves.toMatchObject({ status: "ok" });
 
+  const mobileHealth = await request.get("/health", {
+    headers: {
+      "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+      "sec-ch-ua-mobile": "?1"
+    }
+  });
+  expect(mobileHealth.ok()).toBeTruthy();
+  await expect.soft(mobileHealth.json()).resolves.toMatchObject({ status: "ok" });
+
+  const ready = await request.get("/ready", {
+    headers: {
+      "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+      "sec-ch-ua-mobile": "?1"
+    }
+  });
+  expect(ready.ok()).toBeTruthy();
+  await expect.soft(ready.json()).resolves.toMatchObject({ ready: true });
+
   const desktop = await request.get("/");
   expect(desktop.ok()).toBeTruthy();
   await expect.soft(desktop.text()).resolves.toContain("VPE Prompt Builder 2026");

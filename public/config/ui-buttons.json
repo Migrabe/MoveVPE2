@@ -2,8 +2,7 @@
   "version": "1.2",
   "buttons": {
     "undo-step": {
-      "label": "",
-      "icon": "undo-2",
+      "label": "↶",
       "title": "Шаг назад",
       "styles": {
         "minWidth": "40px",

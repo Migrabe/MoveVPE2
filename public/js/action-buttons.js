@@ -20,9 +20,9 @@
   ].filter(Boolean);
 
   const FALLBACK_BUTTONS = {
-    "undo-step": { action: { type: "call", name: "undoLastStep" } },
-    "header-reset": { action: { type: "call", name: "resetAll" } },
-    "collapse-all": { action: { type: "call", name: "toggleAllSections" } }
+    "undo-step": { label: "↶", title: "Назад", action: { type: "call", name: "undoLastStep" } },
+    "header-reset": { label: "Сброс", title: "Сброс", action: { type: "call", name: "resetAll" } },
+    "collapse-all": { label: "Свернуть", title: "Свернуть секции", action: { type: "call", name: "toggleAllSections" } }
   };
 
   const LOCAL_ICONS = {
@@ -58,6 +58,8 @@
   }
 
   function applyConfig(el, cfg) {
+    const fallbackText = (el.textContent || "").trim();
+
     if (cfg.attrs && typeof cfg.attrs === "object") {
       Object.entries(cfg.attrs).forEach(([k, v]) => {
         el.setAttribute(k, String(v));
@@ -101,6 +103,11 @@
       labelNode.className = "vpe-btn-label";
       labelNode.textContent = String(cfg.label);
       el.appendChild(labelNode);
+    }
+
+    // Safety net: if config omits both icon and label, keep previous visible text.
+    if (!el.childNodes.length && fallbackText) {
+      el.textContent = fallbackText;
     }
   }
 

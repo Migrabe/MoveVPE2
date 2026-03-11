@@ -10,6 +10,11 @@
       "source": "render-oss/skills",
       "sourceType": "github",
       "computedHash": "acae6ef3a24a809b8e06a9d002ab99c6880d59c4783f1072b4175b733524a137"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
     }
   }
 }

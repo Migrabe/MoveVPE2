@@ -8,10 +8,34 @@ Run the permanent smoke suite locally:
 npm run test:e2e:smoke
 ```
 
+On Windows, the safer default is the dedicated-port variant:
+
+```bash
+npm run test:e2e:smoke:fresh
+```
+
 Run the full Playwright suite:
 
 ```bash
 npm run test:e2e
+```
+
+Run the full suite on the dedicated Playwright port:
+
+```bash
+npm run test:e2e:fresh
+```
+
+If you intentionally want Playwright to attach to an already running local server:
+
+```bash
+npm run test:e2e:smoke:reuse
+```
+
+Or for the full suite:
+
+```bash
+npm run test:e2e:reuse
 ```
 
 Install browser binaries when needed:

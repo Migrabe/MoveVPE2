@@ -58,6 +58,7 @@ export function isPhoneHeaders(headers = {}) {
 }
 
 export function shouldSkipVersionRouting(pathname = "") {
+  if (pathname === "/health" || pathname === "/ready") return true;
   if (pathname.startsWith("/api/")) return true;
   if (pathname.startsWith("/js/") || pathname.startsWith("/config/")) return true;
   return STATIC_FILE_RE.test(pathname);
