@@ -4738,10 +4738,19 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       gap: 8px !important;
       flex: 1 1 auto !important;
       min-width: 0 !important;
+      width: 100% !important;
       margin: 0 !important;
       white-space: nowrap !important;
       font-size: 0.9rem !important;
       line-height: 1.15 !important;
+    }
+
+    body.mobile-vpe-shell #generationModeSection.generation-inline .generation-inline-title .generation-inline-switch {
+      margin-left: auto !important;
+    }
+
+    body.mobile-vpe-shell #generationModeSection.generation-inline .generation-inline-title .help-tip {
+      margin-left: 0 !important;
     }
 
     body.mobile-vpe-shell #generationModeSection .generation-inline-header-tools {
