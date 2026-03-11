@@ -1,0 +1,27 @@
+{
+  "name": "vpe-prompt-builder-v4",
+  "version": "4.0.0",
+  "description": "VPE Prompt Builder 2026 - v4.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "playwright:install": "node ./node_modules/playwright/cli.js install chromium firefox webkit",
+    "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
+    "test:e2e:headed": "node ./node_modules/@playwright/test/cli.js test --headed",
+    "test:e2e:smoke": "node ./node_modules/@playwright/test/cli.js test e2e/smoke.spec.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.0",
+    "helmet": "^7.1.0",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
