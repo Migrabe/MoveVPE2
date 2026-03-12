@@ -1,13 +1,13 @@
-const CACHE = "vpe-mobile-shell-v4";
+const CACHE = "vpe-mobile-shell-v5";
 const SHELL_ASSETS = [
   "./",
   "index.html",
-  "mobile.css?v=20260311-6",
+  "mobile.css?v=20260312-7",
   "offline.html",
-  "../js/client_logic_full.js?v=20260311-6",
-  "../js/action-buttons.js?v=20260311-6",
-  "../js/section-visibility.js?v=20260311-6",
-  "js/mobile-shell.js?v=20260311-6",
+  "../js/client_logic_full.js?v=20260312-7",
+  "../js/action-buttons.js?v=20260312-7",
+  "../js/section-visibility.js?v=20260312-7",
+  "js/mobile-shell.js?v=20260312-7",
   "../config/style-presets.json",
   "../config/prompt-templates.json",
   "../config/engine-capabilities.json",

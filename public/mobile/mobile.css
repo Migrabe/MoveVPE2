@@ -4836,6 +4836,13 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       justify-content: space-between !important;
       gap: 10px !important;
       flex-wrap: nowrap !important;
+      border-radius: 16px !important;
+      border: 1px solid rgba(72, 126, 206, 0.36) !important;
+      background: linear-gradient(180deg, rgba(19, 41, 67, 0.96), rgba(13, 31, 52, 0.98)) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 18px rgba(3, 10, 22, 0.22) !important;
+      color: #dcecff !important;
     }
 
     body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label > span:first-child {
@@ -4845,6 +4852,26 @@ body.mobile-vpe-shell .left-panel::-webkit-scrollbar {
       overflow: hidden !important;
       text-overflow: ellipsis !important;
       line-height: 1.2 !important;
+      color: inherit !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label:hover {
+      border-color: rgba(111, 165, 243, 0.52) !important;
+      background: linear-gradient(180deg, rgba(24, 49, 78, 0.98), rgba(16, 37, 61, 0.98)) !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label.checked,
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label:has(input:checked) {
+      border-color: rgba(249, 173, 45, 0.76) !important;
+      background: linear-gradient(180deg, rgba(28, 53, 84, 0.99), rgba(18, 39, 64, 0.99)) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(249, 173, 45, 0.18),
+        0 12px 22px rgba(3, 10, 22, 0.28) !important;
+    }
+
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label.checked > span:first-child,
+    body.mobile-vpe-shell #specialModesSection .toggle-row.special-modes-list .toggle-label:has(input:checked) > span:first-child {
+      color: #f7fbff !important;
     }
 
     /* Seed controls in one compact row */
