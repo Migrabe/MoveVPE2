@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { computeFromState } from '../server/prompt_engine.js';
 
-const rootDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const __filename = fileURLToPath(import.meta.url);
+const rootDir = path.resolve(path.dirname(__filename), '..');
 const fixturePath = path.join(rootDir, 'examples', 'reference_nbp.json');
 const referenceFixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
 
@@ -162,6 +164,67 @@ runCase('state does not leak preset or negative values across requests', () => {
   assert.equal(second.json?.negative, undefined);
   assert.equal(second.json.prompt, 'clean corporate portrait');
   assertNoEmptyValues(second.json);
+});
+
+runCase('special modes resolve deterministically when generate four and 3x3 are both set', () => {
+  const result = computeFromState({
+    aiModel: 'nano-banana-pro',
+    promptFormat: 'flat',
+    mainSubject: 'test scene',
+    aspectRatio: '1:1',
+    generateFourMode: true,
+    grid3x3Mode: true
+  });
+
+  assert.deepEqual(normalizeJson(result.json?.modes), { generateFour: true });
+  assert.match(result.prompt, /GENERATE 4 SCENE VARIATIONS/i);
+  assert.doesNotMatch(result.prompt, /contact sheet|3x3/i);
+});
+
+runCase('motion blur takes precedence over generate four and clears stale special mode output', () => {
+  const result = computeFromState({
+    aiModel: 'nano-banana-pro',
+    promptFormat: 'flat',
+    mainSubject: 'test scene',
+    aspectRatio: '1:1',
+    motionBlurMode: true,
+    generateFourMode: true
+  });
+
+  assert.deepEqual(normalizeJson(result.json?.modes), { motion_blur: true });
+  assert.equal(result.json?.parameters?.motion_blur?.enabled, true);
+  assert.doesNotMatch(result.prompt, /GENERATE 4 SCENE VARIATIONS/i);
+});
+
+runCase('before/after wins deterministically over seamless pattern when both are set', () => {
+  const result = computeFromState({
+    aiModel: 'nano-banana-pro',
+    promptFormat: 'flat',
+    mainSubject: 'test scene',
+    aspectRatio: '1:1',
+    beforeAfter: true,
+    seamlessPattern: true
+  });
+
+  assert.deepEqual(normalizeJson(result.json?.modes), { before_after: true });
+  assert.match(result.prompt, /before and after side-by-side comparison/i);
+  assert.doesNotMatch(result.prompt, /seamless/i);
+});
+
+runCase('midjourney strips incompatible 3x3 mode from output', () => {
+  const result = computeFromState({
+    aiModel: 'midjourney',
+    promptFormat: 'midjourney',
+    mainSubject: 'test scene',
+    aspectRatio: '1:1',
+    grid3x3Mode: true
+  });
+
+  assert.equal(result.json?.model, 'midjourney');
+  assert.equal(result.json?.modes, undefined);
+  assert.doesNotMatch(result.prompt, /contact sheet|3x3/i);
+  assert.match(result.prompt, /--ar 1:1/);
+  assert.match(result.json?.prompt_midjourney || '', /--ar 1:1/);
 });
 
 console.log('NBP JSON contract checks passed');

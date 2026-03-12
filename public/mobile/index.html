@@ -41,11 +41,14 @@
           </div>
         </div>
         <div class="header-right">
-          <button class="option-btn action-btn" id="headerUndoBtn" data-action-id="undo-step"
+          <button type="button" class="option-btn action-btn" id="headerUndoBtn" data-action-id="undo-step"
+            aria-label="Назад"
             title="Назад">↶</button>
-          <button class="option-btn action-btn" id="headerCollapseBtn" data-action-id="collapse-all"
+          <button type="button" class="option-btn action-btn" id="headerCollapseBtn" data-action-id="collapse-all"
+            aria-label="Свернуть секции"
             title="Свернуть секции">▤</button>
-          <button class="option-btn action-btn" id="headerResetBtn" data-action-id="header-reset"
+          <button type="button" class="option-btn action-btn" id="headerResetBtn" data-action-id="header-reset"
+            aria-label="Сброс"
             title="Сброс">↺</button>
         </div>
       </header>
@@ -1820,8 +1823,10 @@
                 <div class="seed-row" style="display:flex;gap:8px;align-items:center;margin-top:4px;">
                   <input type="number" class="input-field" id="seedInput" placeholder="Пусто = случайный"
                     style="flex:1;max-width:220px" min="0" max="4294967295" autocomplete="off" oninput="handleInput()">
-                  <button class="btn btn-ghost action-btn" id="randomSeedBtn" data-action-id="seed-random"></button>
-                  <button class="btn btn-ghost action-btn" id="clearSeedBtn" data-action-id="seed-clear"></button>
+                  <button type="button" class="btn btn-ghost action-btn" id="randomSeedBtn" data-action-id="seed-random"
+                    aria-label="Случайный seed">Случайный</button>
+                  <button type="button" class="btn btn-ghost action-btn" id="clearSeedBtn" data-action-id="seed-clear"
+                    aria-label="Очистить seed">Очистить</button>
                 </div>
               </div>
             </div>

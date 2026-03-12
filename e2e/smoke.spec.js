@@ -108,8 +108,14 @@ test("desktop constructor updates prompt output", async ({ page, browserName }) 
 
 test("mobile route loads mobile shell", async ({ page }) => {
   await page.goto("/mobile/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 
   await expect(page.locator("body.mobile-vpe-shell")).toBeVisible();
   await expect(page.locator("#bottomConstructorPanelBtn")).toBeVisible();
+  await expect(page.locator("#headerUndoBtn")).toHaveAttribute("aria-label", /Назад/i);
+  await expect(page.locator("#headerCollapseBtn")).toHaveAttribute("aria-label", /Свернуть/i);
+  await expect(page.locator("#headerResetBtn")).toHaveAttribute("aria-label", /Сброс/i);
+  await expect(page.locator("#randomSeedBtn")).toHaveText(/Случайный/i);
+  await expect(page.locator("#clearSeedBtn")).toHaveText(/Очистить/i);
+  await expect(page.locator("#specialModesSection .toggle-label")).toHaveCount(4);
 });
