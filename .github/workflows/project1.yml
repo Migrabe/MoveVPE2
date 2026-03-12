@@ -7,10 +7,18 @@ on:
         description: "Why are you running the full project check?"
         required: false
         default: "manual full project check"
+      force_full:
+        description: "Force full E2E run regardless of changed files"
+        required: false
+        default: "true"
 
 jobs:
   full-check:
     runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      DEBIAN_FRONTEND: "noninteractive"
+      NPM_CONFIG_YES: "true"
 
     steps:
       - name: Checkout
@@ -25,59 +33,160 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Detect critical file changes
+        id: critical_changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            changed_files="$(git diff --name-only HEAD~1 HEAD || true)"
+          else
+            changed_files="$(git show --pretty='' --name-only HEAD || true)"
+          fi
+          echo "Changed files:"
+          printf "%s\n" "$changed_files"
+          critical_regex='^(server\.js|server/prompt_engine\.js|server/request_state\.js|server/version_routing\.js|public/js/client_logic_full\.js|public/config/engine-capabilities\.json)$'
+          if printf "%s\n" "$changed_files" | grep -Eq "$critical_regex"; then
+            echo "critical_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Critical files changed: full e2e is mandatory."
+          else
+            echo "critical_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No critical file changes detected."
+          fi
+
       - name: Discover connected skills (project roots)
         shell: bash
         run: |
           set -euo pipefail
           roots=(".agent/skills" ".agents/skills" "skills" "$HOME/.codex/skills" "/home/tot/.codex/skills")
           : > skill-inventory.txt
+          : > skill-inventory-raw.tsv
           for root in "${roots[@]}"; do
             if [ -d "$root" ]; then
               find "$root" -mindepth 1 -maxdepth 1 -type d | sort >> skill-inventory.txt
             fi
           done
           sort -u -o skill-inventory.txt skill-inventory.txt
-          echo "Discovered skills:"
-          cat skill-inventory.txt || true
+          while IFS= read -r d; do
+            name="$(basename "$d")"
+            mtime="$(stat -c %Y "$d" 2>/dev/null || echo 0)"
+            printf "%s\t%s\t%s\n" "$name" "$mtime" "$d" >> skill-inventory-raw.tsv
+          done < skill-inventory.txt
+          sort -k1,1 -k2,2nr skill-inventory-raw.tsv -o skill-inventory-raw.tsv
+          awk -F"\t" '!seen[$1]++{print $1"\t"$2"\t"$3}' skill-inventory-raw.tsv > skill-inventory-latest.tsv
+          echo "Latest skill mapping (name -> selected path):"
+          awk -F"\t" '{print $1" -> "$3}' skill-inventory-latest.tsv
 
-      - name: Validate required skills for project checks
+      - name: Resolve latest skills by purpose (required)
         shell: bash
         run: |
           set -euo pipefail
-          required=(
-            "nbp-json-validator"
-            "playwright"
-            "playwright-interactive"
-            "webapp-testing"
-            "prompt-options-validator"
+          # skill-inventory-latest.tsv columns: name \t mtime \t path
+          resolve_latest_candidate() {
+            local purpose="$1"
+            shift
+            local names=("$@")
+            local chosen=""
+            local best_mtime=-1
+            for n in "${names[@]}"; do
+              if awk -F"\t" -v s="$n" '$1==s{found=1} END{exit(found?0:1)}' skill-inventory-latest.tsv; then
+                local row
+                row="$(awk -F"\t" -v s="$n" '$1==s{print; exit}' skill-inventory-latest.tsv)"
+                local mtime
+                mtime="$(echo "$row" | awk -F"\t" '{print $2}')"
+                local path
+                path="$(echo "$row" | awk -F"\t" '{print $3}')"
+                if [ "${mtime}" -gt "${best_mtime}" ]; then
+                  best_mtime="${mtime}"
+                  chosen="${n}"$'\t'"${mtime}"$'\t'"${path}"
+                fi
+              fi
+            done
+            if [ -z "$chosen" ]; then
+              echo "Missing required purpose: ${purpose}"
+              return 1
+            fi
+            printf "%s\t%s\n" "$purpose" "$chosen"
+          }
+
+          : > skill-purpose-selection.tsv
+          resolve_latest_candidate "logic-core" \
+            "autonomous-prompt-logic-architect" >> skill-purpose-selection.tsv
+          resolve_latest_candidate "logic-options" \
+            "autonomous-prompt-logic-architect" >> skill-purpose-selection.tsv
+          resolve_latest_candidate "json-contract" \
+            "nbp-json-validator" >> skill-purpose-selection.tsv
+          resolve_latest_candidate "e2e-engine" \
+            "playwright" "playwright-interactive" "e2e-testing" >> skill-purpose-selection.tsv
+          resolve_latest_candidate "ui-smoke" \
+            "webapp-testing" "playwright" >> skill-purpose-selection.tsv
+
+          echo "Selected latest skills by purpose:"
+          cat skill-purpose-selection.tsv
+
+      - name: Report recommended extra skills (non-blocking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          recommended=(
+            "autonomous-prompt-logic-architect"
+            "code-reviewer"
+            "engineering-security-engineer"
+            "web-design-guidelines"
+            "e2e-testing"
+            "render-debug"
           )
-          for skill in "${required[@]}"; do
-            if grep -Eq "/${skill}$" skill-inventory.txt; then
-              echo "OK: $skill"
+          for skill in "${recommended[@]}"; do
+            if awk -F"\t" -v s="$skill" '$1==s{found=1} END{exit(found?0:1)}' skill-inventory-latest.tsv; then
+              path="$(awk -F"\t" -v s="$skill" '$1==s{print $3; exit}' skill-inventory-latest.tsv)"
+              echo "Recommended skill available: $skill (selected: $path)"
             else
-              echo "Missing required skill: $skill"
-              exit 1
+              echo "Recommended skill missing: $skill"
             fi
           done
 
-      - name: Install Playwright browsers and OS deps
-        run: npx playwright install --with-deps chromium firefox webkit
-
-      - name: "[Skill: nbp-json-validator] Run JSON contract checks"
+      - name: "[Skills: nbp-json-validator, autonomous-prompt-logic-architect] Run logic and JSON contract checks"
         run: npm run test:nbp-json
+
+      - name: Security baseline (npm audit)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Install Playwright browsers and OS deps
+        run: npx --yes playwright install --with-deps chromium firefox webkit
 
       - name: "[Skills: playwright, webapp-testing] Run smoke suite"
         run: npm run test:e2e:smoke:fresh
 
       - name: "[Skills: playwright, e2e-testing] Run full E2E suite"
+        if: ${{ inputs.force_full == 'true' || steps.critical_changes.outputs.critical_changed == 'true' }}
         run: npm run test:e2e:fresh
+
+      - name: Gate summary for critical files
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "force_full=${{ inputs.force_full }}"
+          echo "critical_changed=${{ steps.critical_changes.outputs.critical_changed }}"
+          if [ "${{ inputs.force_full }}" = "true" ] || [ "${{ steps.critical_changes.outputs.critical_changed }}" = "true" ]; then
+            echo "Full E2E policy: enabled."
+          else
+            echo "Full E2E policy: skipped (no critical changes and force_full=false)."
+          fi
+
+      - name: Check Render production health
+        run: curl -fsS https://vpe-master-wide.onrender.com/health
 
       - name: Upload skill inventory
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: project1-skill-inventory
-          path: skill-inventory.txt
+          path: |
+            skill-inventory.txt
+            skill-inventory-raw.tsv
+            skill-inventory-latest.tsv
+            skill-purpose-selection.tsv
           retention-days: 14
 
       - name: Upload Playwright report
