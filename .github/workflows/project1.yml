@@ -155,11 +155,11 @@ jobs:
         run: npx --yes playwright install --with-deps chromium firefox webkit
 
       - name: "[Skills: playwright, webapp-testing] Run smoke suite"
-        run: npm run test:e2e:smoke:fresh
+        run: env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY NO_PROXY=localhost,127.0.0.1 npm run test:e2e:smoke:fresh
 
       - name: "[Skills: playwright, e2e-testing] Run full E2E suite"
         if: ${{ inputs.force_full == 'true' || steps.critical_changes.outputs.critical_changed == 'true' }}
-        run: npm run test:e2e:fresh
+        run: env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY NO_PROXY=localhost,127.0.0.1 npm run test:e2e:fresh
 
       - name: Gate summary for critical files
         if: always()

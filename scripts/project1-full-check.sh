@@ -21,10 +21,10 @@ else
 fi
 
 echo "[project1-local] E2E smoke (fresh)"
-npm run test:e2e:smoke:fresh
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY NO_PROXY=localhost,127.0.0.1 npm run test:e2e:smoke:fresh
 
 echo "[project1-local] E2E full (fresh)"
-npm run test:e2e:fresh
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY NO_PROXY=localhost,127.0.0.1 npm run test:e2e:fresh
 
 echo "[project1-local] Render health"
 curl -fsS https://vpe-master-wide.onrender.com/health
