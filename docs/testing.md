@@ -44,6 +44,24 @@ Install browser binaries when needed:
 npm run playwright:install
 ```
 
+Run the full autonomous project check:
+
+```bash
+npm run check:full
+```
+
+Run the same full check from any directory:
+
+```bash
+bash /mnt/c/Users/TOT/Documents/MoveVPE2/scripts/project1-anywhere.sh
+```
+
+If your project path is different:
+
+```bash
+MOVEVPE2_ROOT=/path/to/MoveVPE2 bash /path/to/project1-anywhere.sh
+```
+
 ## What the smoke suite covers
 
 - `GET /health`

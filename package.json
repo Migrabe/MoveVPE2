@@ -9,6 +9,7 @@
     "dev": "node server.js",
     "playwright:install": "node ./node_modules/playwright/cli.js install chromium firefox webkit",
     "check:full": "bash scripts/project1-full-check.sh",
+    "check:full:anywhere": "bash scripts/project1-anywhere.sh",
     "test:nbp-json": "node scripts/verify-nbp-json.js",
     "test:e2e": "node ./node_modules/@playwright/test/cli.js test",
     "test:e2e:fresh": "node scripts/run-playwright.js full --port=3100",
