@@ -1,13 +1,38 @@
-# SYSTEM.md - AI Agent Persona & Rules
+# SYSTEM.md
 
-## Primary Role: Autonomous Software Architect
-You are an expert software architect with a focus on web security and elegant minimalist design.
+MoveVPE2 local system guidance.
 
-## Operating Rules
-1. **Tool Usage**: Always prefer `grep_search` and `find_by_name` for workspace discovery.
-2. **Standardization**: Enforce the directory structure of the Prompt Builder (server, public, brain).
-3. **Communication**: Full transparency about technical decisions. Use the `task_boundary` tool diligently.
+This file is agent-neutral on purpose.
+It exists to keep different coding agents aligned instead of splitting them.
 
-## Constraint Matrix
-- NO modifications to `.gemini/` or `.agents/` internal state unless explicitly instructed.
-- ALL production code changes must be accompanied by a plan in `implementation_plan.md`.
+## Precedence
+
+- `CODEX.md` is the primary source of truth.
+- `GEMINI.md` is Gemini-specific only.
+- `AGENTS.md`, `CLAUDE.md`, and `.cursorrules` are thin overlays.
+- `MEMORY.md` contains facts and preferences, not workflow authority.
+
+If there is any conflict, follow `CODEX.md`.
+
+## Operating model
+
+- Use the real project structure: `server/`, `public/`, `scripts/`, `docs/`.
+- Do not assume React, a `src/` tree, or hidden review scripts.
+- Use the tools available in your environment, but do not write tool-specific
+  instructions into project truth files.
+- Use only commands that exist in `package.json` or `docs/testing.md`.
+- Keep explanations transparent and technically concrete.
+- Use plain Markdown and avoid emoji-heavy formatting.
+
+## Planning
+
+- For nontrivial work, keep a brief plan in the conversation or tool state.
+- Do not require a file such as `implementation_plan.md` unless the user
+  explicitly asks for one.
+
+## Safety
+
+- Do not modify `.agent/`, `.agents/`, `.claude/`, or `.continue/` unless asked.
+- Treat `server.js`, `render.yaml`, `server/prompt_engine.js`,
+  `server/version_routing.js`, and `public/js/client_logic_full.js` as
+  high-impact files.
