@@ -1,0 +1,89 @@
+name: project1
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you running the full project check?"
+        required: false
+        default: "manual full project check"
+
+jobs:
+  full-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Discover connected skills (project roots)
+        shell: bash
+        run: |
+          set -euo pipefail
+          roots=(".agent/skills" ".agents/skills" "skills" "$HOME/.codex/skills" "/home/tot/.codex/skills")
+          : > skill-inventory.txt
+          for root in "${roots[@]}"; do
+            if [ -d "$root" ]; then
+              find "$root" -mindepth 1 -maxdepth 1 -type d | sort >> skill-inventory.txt
+            fi
+          done
+          sort -u -o skill-inventory.txt skill-inventory.txt
+          echo "Discovered skills:"
+          cat skill-inventory.txt || true
+
+      - name: Validate required skills for project checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            "nbp-json-validator"
+            "playwright"
+            "playwright-interactive"
+            "webapp-testing"
+            "prompt-options-validator"
+          )
+          for skill in "${required[@]}"; do
+            if grep -Eq "/${skill}$" skill-inventory.txt; then
+              echo "OK: $skill"
+            else
+              echo "Missing required skill: $skill"
+              exit 1
+            fi
+          done
+
+      - name: Install Playwright browsers and OS deps
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: "[Skill: nbp-json-validator] Run JSON contract checks"
+        run: npm run test:nbp-json
+
+      - name: "[Skills: playwright, webapp-testing] Run smoke suite"
+        run: npm run test:e2e:smoke:fresh
+
+      - name: "[Skills: playwright, e2e-testing] Run full E2E suite"
+        run: npm run test:e2e:fresh
+
+      - name: Upload skill inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project1-skill-inventory
+          path: skill-inventory.txt
+          retention-days: 14
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project1-playwright-report
+          path: playwright-report
+          retention-days: 14
