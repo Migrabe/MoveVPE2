@@ -4,6 +4,28 @@ export CI=true
 export DEBIAN_FRONTEND=noninteractive
 export NPM_CONFIG_YES=true
 
+assert_movevpe2_context() {
+  local root
+  root="$(pwd)"
+  [ -f "$root/package.json" ] || { echo "[project1-local] package.json not found"; exit 1; }
+  [ -f "$root/CODEX.md" ] || { echo "[project1-local] CODEX.md not found"; exit 1; }
+  [ -f "$root/server.js" ] || { echo "[project1-local] server.js not found"; exit 1; }
+  if ! grep -q '"name": "vpe-prompt-builder-v4"' "$root/package.json"; then
+    echo "[project1-local] Refusing to run: not MoveVPE2 package"
+    exit 1
+  fi
+  if git -C "$root" rev-parse --git-dir >/dev/null 2>&1; then
+    local remote
+    remote="$(git -C "$root" remote get-url origin 2>/dev/null || true)"
+    if [ -n "$remote" ] && [[ "$remote" != *"Migrabe/MoveVPE2"* ]]; then
+      echo "[project1-local] Refusing to run: origin is not Migrabe/MoveVPE2"
+      exit 1
+    fi
+  fi
+}
+
+assert_movevpe2_context
+
 echo "[project1-local] Installing dependencies"
 npm ci
 

@@ -56,6 +56,12 @@ Run the same full check from any directory:
 bash /mnt/c/Users/TOT/Documents/MoveVPE2/scripts/project1-anywhere.sh
 ```
 
+Agent-facing copies (for AntiGravity/Codex tooling) are located in:
+
+```text
+.agent/workflows/
+```
+
 If your project path is different:
 
 ```bash
