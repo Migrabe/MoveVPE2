@@ -1,0 +1,24 @@
+# Runtime-irrelevant files
+.git
+.github
+.agent
+.agents
+.claude
+.continue
+.kiro
+node_modules
+tmp
+test-results
+playwright-report
+e2e
+examples
+docs
+skills
+
+# Local/editor/system files
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
