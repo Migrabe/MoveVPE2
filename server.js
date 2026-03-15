@@ -39,12 +39,12 @@ app.use(
         defaultSrc: ["'self'"],
         // The current app still ships inline scripts in the HTML entrypoints.
         // WebKit enforces this CSP strictly and otherwise breaks core UI logic.
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com"],
         scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "blob:", "https://www.google-analytics.com", "https://stats.g.doubleclick.net"],
+        connectSrc: ["'self'", "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://stats.g.doubleclick.net"],
         upgradeInsecureRequests: isProduction ? [] : null,
       }
     },
